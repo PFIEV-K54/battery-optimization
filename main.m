@@ -13,7 +13,7 @@ OptimisationGoal = 'hover'; % selection criteria
 ThrustWeightRatio = 3; % estimator for maximum performance
                     % 2 - minimum
                     % 3 - payload transport
-                    % 4 - survaillence
+                    % 4 - surveillence
                     % 5+ - aerobatics / hi-speed video
                     % 7+ - racing
 PropDiameter_Min = 12; % inch, min. propeller diameter
@@ -32,12 +32,10 @@ BattCellVoltage = 3.7; % V per cell, battery cell voltage
 BattAvgEnergyDensity = (100+265)/2/1000; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
 BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
 BattCapacityInitial = 6000; % mAh, battery capacity initial value
-BattCapacity = BattCapacityInitial;
 BattDeltaCapacity = 100; % mAh
 BattCapacityLimit = 50000; %mAh
 BattPeukertConstant = 1.3; % for LiPo, Peukert's constant for selected type of battery
 BattVoltageSagConstant = 0.5/0.8*BattCellNo; % 0.5V decrease per cell in resting voltage for 80% DoD
-BattHourRating = 1; % h
 
 %% Mass data [g] config
 mass_Frame = 543; % Lumenier QAV500 V2 with 540mm arms
@@ -49,10 +47,12 @@ mass_Motor_Est = 120; % FXC4006-13 740kv - 92 g
 mass_ESC_Est = 35; % Lumenier 35A BLHeli_S ESC OPTO - 7 g
 mass_Propeller_Est = 40; % HQProp 12x4.5 Props - 18g
 mass_Payload = 1000;
-mass_Battery = BattCapacity/BattAvgSpecificCapacity; % unit: g
 mass_Other_Est = 20; % cabling, straps, standoffs, etc.
 
 %% Begin calculation
+BattHourRating = 1; % h
+BattCapacity = BattCapacityInitial;
+mass_Battery = BattCapacity/BattAvgSpecificCapacity; % unit: g
 old_hover_time = 0; % hours
 new_hover_time = 0; % hours
 while old_hover_time <= new_hover_time
@@ -253,7 +253,7 @@ while old_hover_time <= new_hover_time
      new_hover_time = time_hover(length(time_hover));
 end
 
-
+%% display results
 
 plot_propPerf; % plot propeller performance & battery simulation results 
 plot_motorPerf; % plot motor performance
