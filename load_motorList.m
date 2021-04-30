@@ -1,3 +1,14 @@
+%% ------------------------------------------------------------------------
+% Multirotor Sizing Methodology
+% with Flight Time Estimation
+%
+% M. Biczyski, R. Sehab, G.Krebs, J.F. Whidborne, P. Luk
+%
+% load_motorList.m - implements function load_motorList() that reads basic
+% motor information from the database and calculates its operating points; 
+% requires file ''DCbase.dcd'' from Drive Calculator software
+%% ------------------------------------------------------------------------
+
 function motorList = load_motorList(voltage, prop_speedMax, prop_torqueMax, prop_speedHover, prop_torqueHover, spec_mass)
     motorList = {};
     conn = sqlite('DCbase.dcd'); % connect to the database
@@ -5,10 +16,6 @@ function motorList = load_motorList(voltage, prop_speedMax, prop_torqueMax, prop
     mdata = fetch(conn, 'SELECT * FROM MData'); % run SQL query to obtain full 'MData' table
     esc = fetch(conn, 'SELECT * FROM ESC'); % run SQL query to obtain full 'ESC' table
     close(conn); % close connection to database
-    
-    %disp(motors)
-    %disp(size(motors,1))
-    %disp(esc)
 
     %% ---------------------
     for ii = 1:size(motors,1) % filter motors in the database based on maximum current, mass and maximum speed

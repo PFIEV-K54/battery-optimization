@@ -16,10 +16,10 @@ ThrustWeightRatio = 3; % estimator for maximum performance
                     % 4 - surveillence
                     % 5+ - aerobatics / hi-speed video
                     % 7+ - racing
-PropDiameter_Min = 12; % inch, min. propeller diameter
-PropDiameter_Max = 20; % inch, max. propeller diameter
-SafetyFactor = 1.1; % [1-2], arbitrary safety parameter
-AcceptedTypes = {'MR' 'E' 'F' 'SF'}; % preferred propeller series
+PropDiameter_Min = 8; % inch, min. propeller diameter
+PropDiameter_Max = 9; % inch, max. propeller diameter
+SafetyFactor = 1.05; % [1-2], arbitrary safety parameter
+AcceptedTypes = {'SF' 'MR' 'E' 'F'}; % preferred propeller series
                   % E	Electric
                   % F	Folding Blade (electric only)
                   % MR	Multi-Rotor (electric only)
@@ -30,23 +30,23 @@ AcceptedTypes = {'MR' 'E' 'F' 'SF'}; % preferred propeller series
 BattCellNo = 4; %S 1P, battery cell count
 BattCellVoltage = 3.7; % V per cell, battery cell voltage
 BattAvgEnergyDensity = (100+265)/2/1000; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
-BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
-BattCapacityInitial = 6000; % mAh, battery capacity initial value
+BattAvgSpecificCapacity = 10;%BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
+BattCapacityInitial = 5870; % mAh, battery capacity initial value
 BattDeltaCapacity = 100; % mAh
-BattCapacityLimit = 50000; %mAh
+BattCapacityLimit = 5780; %mAh
 BattPeukertConstant = 1.3; % for LiPo, Peukert's constant for selected type of battery
 BattVoltageSagConstant = 0.5/0.8*BattCellNo; % 0.5V decrease per cell in resting voltage for 80% DoD
 
 %% Mass data [g] config
-mass_Frame = 543; % Lumenier QAV500 V2 with 540mm arms
+mass_Frame = 1600; % Lumenier QAV500 V2 with 540mm arms
 mass_FC = 21; % Vector Flight Controller + OSD
 mass_FC_GPS = 13;
-mass_FC_CurrentSensor = 15;
+mass_FC_CurrentSensor = 0;
 mass_Receiver = 2; % FrSky R-XSR 2.4GHz 16CH ACCST
-mass_Motor_Est = 120; % FXC4006-13 740kv - 92 g
+mass_Motor_Est = 100; % FXC4006-13 740kv - 92 g
 mass_ESC_Est = 35; % Lumenier 35A BLHeli_S ESC OPTO - 7 g
-mass_Propeller_Est = 40; % HQProp 12x4.5 Props - 18g
-mass_Payload = 1000;
+mass_Propeller_Est = 24; % HQProp 12x4.5 Props - 18g
+mass_Payload = 0; %g: camera
 mass_Other_Est = 20; % cabling, straps, standoffs, etc.
 
 %% Begin calculation
@@ -55,8 +55,9 @@ BattCapacity = BattCapacityInitial;
 mass_Battery = BattCapacity/BattAvgSpecificCapacity; % unit: g
 old_hover_time = 0; % hours
 new_hover_time = 0; % hours
-while old_hover_time <= new_hover_time
+%while old_hover_time <= new_hover_time
     mass_Battery = BattCapacity/BattAvgSpecificCapacity; % unit: g
+    %mass_Battery = 700; % unit: g
     mass_NoDrive_Est = mass_Frame + mass_FC + mass_FC_GPS + mass_FC_CurrentSensor + mass_Receiver + mass_Payload + mass_Other_Est;
     mass_Total_Est = mass_NoDrive_Est + RotorNo*(mass_Motor_Est + mass_ESC_Est + mass_Propeller_Est) + mass_Battery;
 
@@ -245,13 +246,13 @@ while old_hover_time <= new_hover_time
     disp(['This configuration should achieve around ' num2str(round(time_hover(end)*60)) ' min of hover and around ' num2str(round(time_max(end)*60)) ' min of flight at full throttle.']);
     disp('------------------------------------------------------------------------');
     %% update loop parametters
-     BattCapacity = BattCapacity + BattDeltaCapacity;
-     if BattCapacity > BattCapacityLimit
-         break;
-     end
-     old_hover_time = new_hover_time;
-     new_hover_time = time_hover(length(time_hover));
-end
+%     BattCapacity = BattCapacity + BattDeltaCapacity;
+%      if BattCapacity > BattCapacityLimit
+%          break;
+%      end
+%      old_hover_time = new_hover_time;
+%      new_hover_time = time_hover(length(time_hover));
+%end
 
 %% display results
 
