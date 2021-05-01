@@ -796,7 +796,7 @@ while 1
         mass_Motor_Est); % loading motor set with operating points
 
     if size(motorList,1) < 1
-        %error('ERROR! No matching motor found!');
+        error('ERROR! No matching motor found!');
         set(handles.result,'string','ERROR! No matching motor found!');
     end
 
@@ -885,8 +885,7 @@ switch OptimisationGoal
     case 'utilisation'
         textOptimisation = 'maximum usable power range of propeller';
     otherwise
-        %error('ERROR! Wrong optimisation criteria!');
-        set(handles.result,'string','ERROR! Wrong optimisation criteria!');
+        error('ERROR! Wrong optimisation criteria!');
 end
 
 selectedPropeller = propSpecification{1};
