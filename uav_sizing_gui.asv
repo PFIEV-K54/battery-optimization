@@ -22,7 +22,7 @@ function varargout = uav_sizing_gui(varargin)
 
 % Edit the above text to modify the response to help uav_sizing_gui
 
-% Last Modified by GUIDE v2.5 01-May-2021 00:41:40
+% Last Modified by GUIDE v2.5 08-May-2021 00:00:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -32,6 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @uav_sizing_gui_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
+               
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -683,10 +684,12 @@ BattVoltageSagConstant = 0.5/0.8*BattCellNo; % 0.5V decrease per cell in resting
 BattHourRating = 1;
 
 %% Mass data [g] config
-mass_Motor_Est = str2double(get(handles.mass_Motor_Est,'string')); % FXC4006-13 740kv - 92 g
-mass_Propeller_Est = 200; % HQProp 12x4.5 Props - 18g
+mass_Motor_Est = 1000;%str2double(get(handles.mass_Motor_Est,'string')); % FXC4006-13 740kv - 92 g
+mass_Propeller_Est = 500; % HQProp 12x4.5 Props - 18g
 mass_Payload = str2double(get(handles.mass_Payload,'string')); %g
 BattCapacity = str2double(get(handles.BattCapacity,'string')); %mAh
+mass_Battery = str2double(get(handles.massBattery,'string'));
+
 %mass_NoDrive_Est = str2double(get(handles.mass_NoDrive)) + mass_Payload;
 %mass_Total_Est = mass_NoDrive_Est + RotorNo*(mass_Motor_Est + mass_Propeller_Est);
 %mass_Total = 0;
@@ -694,7 +697,7 @@ BattCapacity = str2double(get(handles.BattCapacity,'string')); %mAh
 %mass_Battery = 600; % Lumenier 5200mAh 4s 35c
 % mass_Other_Est = 20; % cabling, straps, standoffs, etc.
 
-mass_NoDrive_Est = str2double((get(handles.mass_NoDrive,'string'))) + mass_Payload;
+mass_NoDrive_Est = str2double((get(handles.mass_NoDrive,'string'))) + mass_Payload + mass_Battery;
 mass_Total_Est = mass_NoDrive_Est + RotorNo*(mass_Motor_Est + mass_Propeller_Est);
 mass_Total = 0;
 
@@ -796,7 +799,7 @@ while 1
         mass_Motor_Est); % loading motor set with operating points
 
     if size(motorList,1) < 1
-        error('ERROR! No matching motor found!');
+        %error('ERROR! No matching motor found!');
         set(handles.result,'string','ERROR! No matching motor found!');
     end
 
@@ -885,7 +888,8 @@ switch OptimisationGoal
     case 'utilisation'
         textOptimisation = 'maximum usable power range of propeller';
     otherwise
-        error('ERROR! Wrong optimisation criteria!');
+        %error('ERROR! Wrong optimisation criteria!');
+        set(handles.result,'string','ERROR! Wrong optimisation criteria!');
 end
 
 selectedPropeller = propSpecification{1};
@@ -936,3 +940,46 @@ set(handles.result,'string',resultString);
 %% display results
 plot_propPerf; % plot propeller performance & battery simulation results 
 plot_motorPerf; % plot motor performance
+
+
+
+function massBattery_Callback(hObject, eventdata, handles)
+% hObject    handle to massBattery (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of massBattery as text
+%        str2double(get(hObject,'String')) returns contents of massBattery as a double
+
+% --- Executes during object creation, after setting all properties.
+function massBattery_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to massBattery (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on key press with focus on BattCapacity and none of its controls.
+function BattCapacity_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to BattCapacity (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+BattCellNo = str2double(get(handles.BattCellNo,'string')); %S 1P, battery cell count
+BattAvgEnergyDensity = 0.1825; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
+BattCellVoltage = str2double(get(handles.BattCellVoltage,'string')); % V per cell, battery cell voltage
+BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
+battCapacity = get(handles.BattCapacity,'string');
+if ~isempty(battCapacity)
+    battCapacity = str2double(battCapacity);
+    mass_Battery_Est = battCapacity/BattAvgSpecificCapacity;
+    set(handles.massBattery,'string',mass_Battery_Est);
+end
