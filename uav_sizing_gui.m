@@ -684,8 +684,20 @@ BattVoltageSagConstant = 0.5/0.8*BattCellNo; % 0.5V decrease per cell in resting
 BattHourRating = 1;
 
 %% Mass data [g] config
-mass_Motor_Est = 500;%str2double(get(handles.mass_Motor_Est,'string')); % FXC4006-13 740kv - 92 g
-mass_Propeller_Est = 200; % HQProp 12x4.5 Props - 18g
+if BattCellNo < 4
+    mass_Motor_Est = 135;
+    mass_Propeller_Est = 50; 
+else
+    if BattCellNo<6
+        mass_Motor_Est = 500;
+        mass_Propeller_Est = 200;
+    else 
+        mass_Motor_Est = 1200;
+        mass_Propeller_Est = 500;
+    end
+end
+% mass_Motor_Est = 500;
+% mass_Propeller_Est = 200; 
 mass_Payload = str2double(get(handles.mass_Payload,'string')); %g
 BattCapacity = str2double(get(handles.BattCapacity,'string')); %mAh
 mass_Battery = str2double(get(handles.massBattery,'string'));
