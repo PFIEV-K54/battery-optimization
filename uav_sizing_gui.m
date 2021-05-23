@@ -353,7 +353,16 @@ function BattCapacity_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of BattCapacity as text
 %        str2double(get(hObject,'String')) returns contents of BattCapacity as a double
-
+BattCellNo = str2double(get(handles.BattCellNo,'string')); %S 1P, battery cell count
+BattAvgEnergyDensity = 0.1825; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
+BattCellVoltage = str2double(get(handles.BattCellVoltage,'string')); % V per cell, battery cell voltage
+BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
+battCapacity = get(handles.BattCapacity,'string');
+if ~isempty(battCapacity)
+    battCapacity = str2double(battCapacity);
+    mass_Battery_Est = battCapacity/BattAvgSpecificCapacity;
+    set(handles.massBattery,'string',mass_Battery_Est);
+end
 
 % --- Executes during object creation, after setting all properties.
 function BattCapacity_CreateFcn(hObject, eventdata, handles)
@@ -629,10 +638,23 @@ function analyze_Callback(hObject, eventdata, handles)
 RPM2RAD = 2*pi/60;
 RAD2RPM = 60/2/pi;
 
-%resultTextBox = uicontrol('Style','edit','Position',[0.429 0.47 86 6.24],'min',0,'max',7,'enable','inactive'); % create a listbox object
+%% Reset all result field to default
+set(handles.suggestedBattery, 'string', " ");
+set(handles.suggestedProp, 'string', " ");
+set(handles.suggestedMotor,'string'," ");
+set(handles.suggestedESC,'string'," ");
+set(handles.hoveringThrust,'string'," ");
+set(handles.hoveringPowerPerMotor,'string'," ");
+set(handles.hoveringRPM,'string'," ");
+set(handles.hoveringPowerPerMotor,'string'," ");
+set(handles.fullThrottleThrust,'string'," ");
+set(handles.fullThrottlePowerPerMotor,'string'," ");
+set(handles.fullThrottleRPM,'string'," ");
+set(handles.fullThrottleTime,'string'," ");
+set(handles.result,'string'," ");
 
 %% User parameters config
-RotorNo = str2num(get(handles.RotorNo,'string'));
+RotorNo = str2double(get(handles.RotorNo,'string'));
 disp(['RotorNo: ' num2str(RotorNo)]);
 OptimisationGoalValue = get(handles.OptimisationGoal,'value');
 if OptimisationGoalValue == 1
@@ -866,7 +888,7 @@ while 1
         ii = ii+1;
     end
     time_hover = (0:ii-1)*timeStep; % calculate time spent in hover
-
+    
     ii = 1;
     while voltage_max(ii) > BattCellVoltage*BattCellNo && ii*timeStep < 2
         voltage_max(ii+1) = voltage_max(1) - (BattVoltageSagConstant/capacity_max(1))*(capacity_max(1) - capacity_max(ii)); % calculate instantaneus voltage including voltage sag
@@ -984,14 +1006,3 @@ function BattCapacity_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-
-BattCellNo = str2double(get(handles.BattCellNo,'string')); %S 1P, battery cell count
-BattAvgEnergyDensity = 0.1825; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
-BattCellVoltage = str2double(get(handles.BattCellVoltage,'string')); % V per cell, battery cell voltage
-BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
-battCapacity = get(handles.BattCapacity,'string');
-if ~isempty(battCapacity)
-    battCapacity = str2double(battCapacity);
-    mass_Battery_Est = battCapacity/BattAvgSpecificCapacity;
-    set(handles.massBattery,'string',mass_Battery_Est);
-end
