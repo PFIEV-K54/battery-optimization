@@ -73,8 +73,11 @@ function motorList = load_motorList1(motors, mdata, esc, voltage, prop_speedMax,
            
             % motorList = ID, name, ILimit (A), mass (g), kV, Rm (Ohm),
             % op_Imax (A), op_powerMaxEl (W), op_effMax (%), op_IHover (A), op_powerHoverEl (W), op_effHover (%)
-            motorList(end+1,:) = {motor_id, motors{ii,3}, motors{ii,13}, mass, kV, Rm,...
+            if motors{ii,13} >= motor_currentMax
+                motorList(end+1,:) = {motor_id, motors{ii,3}, motors{ii,13}, mass, kV, Rm,...
                                   motor_currentMax, motor_powerMaxEl, motor_effMax, motor_currentHover, motor_powerHoverEl, motor_effHover};                 
+        
+            end
         end
     end
      disp(['load_motorList1:: motorLists size = ' num2str(size(motorList, 1))]);
