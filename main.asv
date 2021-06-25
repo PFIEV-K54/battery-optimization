@@ -137,7 +137,8 @@ new_hover_time = 0; % hours
     % motorList = ID, name, ILimit (A), mass (g), kV, Rm (Ohm),
             % op_Imax (A), op_powerMaxEl(W), op_effMax (%), op_IHover (A), op_powerHoverEl (W), op_effHover (%)
             
-    motorList = load_motorList(BattCellNo*BattCellVoltage, operatingPoints{temp_propChosen_pos,2}(1), operatingPoints{temp_propChosen_pos,2}(3),...
+%     motorList = load_motorList(BattCellNo*BattCellVoltage, operatingPoints{temp_propChosen_pos,2}(1), operatingPoints{temp_propChosen_pos,2}(3),...
+    motorList = load_motorList(BattCellNo*BattCellVoltage, operatingPoints{temp_propChosen_pos,3}(1), operatingPoints{temp_propChosen_pos,2}(3),...
         operatingPoints{temp_propChosen_pos,1}(1), operatingPoints{temp_propChosen_pos,1}(3)*SafetyFactor, mass_Motor_Est); % loading motor set with operating points
 
     if size(motorList,1) < 1

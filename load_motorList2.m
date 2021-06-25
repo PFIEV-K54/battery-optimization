@@ -9,7 +9,7 @@
 % requires file ''DCbase.dcd'' from Drive Calculator software
 %% ------------------------------------------------------------------------
 
-function motorList = load_motorList(voltage, prop_speedMax, prop_torqueMax, prop_speedHover, prop_torqueHover, spec_mass)
+function motorList = load_motorList2(voltage, prop_speedMax, prop_torqueMax, prop_speedHover, prop_torqueHover, spec_mass)
     motorList = {};
     conn = sqlite('DCbase.dcd'); % connect to the database
     motors = fetch(conn, 'SELECT * FROM Motors'); % run SQL query to obtain full 'Motors' table
@@ -45,6 +45,7 @@ function motorList = load_motorList(voltage, prop_speedMax, prop_torqueMax, prop
 
         %% ---------------------
         prop_powerMax = prop_torqueMax*prop_speedMax/60*2*pi; % calculate required propeller power at WOT
+        disp(['prop_powerMax = ' num2str(prop_powerMax)]);
         prop_powerHover = prop_torqueHover*prop_speedHover/60*2*pi; % calculate required propeller power at hover
         motor_currentMax = (voltage - sqrt(voltage^2-4*Rm*(ironLoss+prop_powerMax)))/(2*Rm); % calculate motor current at WOT
         disp(['motor_currentMax = ' num2str(motor_currentMax)]);
@@ -62,9 +63,11 @@ function motorList = load_motorList(voltage, prop_speedMax, prop_torqueMax, prop
            
             % motorList = ID, name, ILimit (A), mass (g), kV, Rm (Ohm),
             % op_Imax (A), op_powerMaxEl (W), op_effMax (%), op_IHover (A), op_powerHoverEl (W), op_effHover (%)
-            motorList(end+1,:) = {motor_id, motors{ii,3}, motors{ii,13}, mass, kV, Rm,...
+            if motor_powerMaxEl > motor_powerHoverEl 
+                motorList(end+1,:) = {motor_id, motors{ii,3}, motors{ii,13}, mass, kV, Rm,...
                                   motor_currentMax, motor_powerMaxEl, motor_effMax, motor_currentHover, motor_powerHoverEl, motor_effHover};
-                              
+        
+            end
         end
     end
 end

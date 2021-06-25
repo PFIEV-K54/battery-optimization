@@ -22,7 +22,7 @@ function varargout = uav_sizing_gui(varargin)
 
 % Edit the above text to modify the response to help uav_sizing_gui
 
-% Last Modified by GUIDE v2.5 08-May-2021 00:00:40
+% Last Modified by GUIDE v2.5 23-Jun-2021 21:49:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -185,18 +185,18 @@ end
 
 
 
-function ThrustWeightRatio_Callback(hObject, eventdata, handles)
-% hObject    handle to ThrustWeightRatio (see GCBO)
+function dischargeRating_Callback(hObject, eventdata, handles)
+% hObject    handle to dischargeRating (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of ThrustWeightRatio as text
-%        str2double(get(hObject,'String')) returns contents of ThrustWeightRatio as a double
+% Hints: get(hObject,'String') returns contents of dischargeRating as text
+%        str2double(get(hObject,'String')) returns contents of dischargeRating as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function ThrustWeightRatio_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ThrustWeightRatio (see GCBO)
+function dischargeRating_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to dischargeRating (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -668,8 +668,8 @@ else
 end
 disp(['OptimisationGoal: ' OptimisationGoal]);
 
-ThrustWeightRatio = str2double(get(handles.ThrustWeightRatio,'string'));
-disp(['ThrustWeightRatio: ' num2str(ThrustWeightRatio)]);
+% ThrustWeightRatio = str2double(get(handles.dischargeRating,'string'));
+% disp(['ThrustWeightRatio: ' num2str(ThrustWeightRatio)]);
 
 PropDiameter_Min = str2double(get(handles.PropDiameter_Min,'string')); % inch, min. propeller diameter
 disp(['PropDiameter_Min: ' num2str(PropDiameter_Min)]);
@@ -723,6 +723,8 @@ end
 mass_Payload = str2double(get(handles.mass_Payload,'string')); %g
 BattCapacity = str2double(get(handles.BattCapacity,'string')); %mAh
 mass_Battery = str2double(get(handles.massBattery,'string'));
+DischargeRate = str2double(get(handles.dischargeRating,'string'));
+MaxDischargeCurrent = DischargeRate*BattCapacity/1000;
 
 %mass_NoDrive_Est = str2double(get(handles.mass_NoDrive)) + mass_Payload;
 %mass_Total_Est = mass_NoDrive_Est + RotorNo*(mass_Motor_Est + mass_Propeller_Est);
@@ -774,15 +776,22 @@ while 1
     %                   [speed, thrust, torque, power]
 
     propPerf = {};
-    for ii = 1:consideredNo
+    for ii = 1:consideredNo 
         % TRUE/FALSE for plot
         propPerf(ii) = {load_propPerf(propList_considered{ii,2}, false)}; % loading propeller static performance data
     end
 
     %% Calculate operating points
     thrustHover_Est = mass_Total_Est/RotorNo; % calcculate thrust required for hover
-    thrustMax_Est = thrustHover_Est*ThrustWeightRatio; % calculate estimated thrust at WOT
+%     thrustMax_Est = thrustHover_Est*ThrustWeightRatio; % calculate estimated thrust at WOT
+    
+    % Calculate thrustMax_Est from MaxDischargeCurrent
+    eff = 0.8;
+    PowerEst = BattCellNo*BattCellVoltage*SafetyFactor*eff;
+    
     for ii = 1:consideredNo
+        % propPerf = RPM, Thrust (g), Power (W), Torque (Nm), Cp, Ct
+        thrustMax_Est = interp1(propPerf{ii}(2:end,3), propPerf{ii}(2:end,1), PowerEst);
         speedHover = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustHover_Est); % obtaining propeller speed at hover from required thrust for hover
         speedMax = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustMax_Est); % obtaining propeller speed at WOT from estimated thrust at WOT 
         speedLimit = propList_considered{ii,6}; % obtaining propeller's limiting speed specified by the manufacturer
@@ -840,7 +849,17 @@ while 1
     %% Select motor
     switch OptimisationGoal % selection of approperiate criteria based on user's choice
         case 'hover'
-            [~, temp_motorChosen_pos] = min([motorList{:,11}]); % power at hover
+%             [~, temp_motorChosen_pos] = min([motorList{:,11}]); % power at hover
+            temp_motorChosen_pos = 1;
+            disp(['MotorList size = ' num2str(size(motorList))]);
+            minVal = motorList{1,11};
+            tableSize = size(motorList,1);
+            for i = 1 : tableSize
+                if motorList{i,11} < minVal
+                    temp_motorChosen_pos = i;
+                    minVal = motorList{i,11};
+                end
+            end
         case 'max'
             [~, temp_motorChosen_pos] = min([motorList{:,8}]); % power at WOT
         case 'utilisation'
@@ -888,7 +907,6 @@ while 1
         ii = ii+1;
     end
     time_hover = (0:ii-1)*timeStep; % calculate time spent in hover
-    disp
     
     ii = 1;
     while voltage_max(ii) > BattCellVoltage*BattCellNo && ii*timeStep < 2

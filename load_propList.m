@@ -65,6 +65,7 @@ function output = load_propList()
             otherwise
                 SpeedLimitSet = 225000;
         end
+        % RPM limits
         fileList{ii,6} = SpeedLimitSet/fileList{ii,3};
     end
 
