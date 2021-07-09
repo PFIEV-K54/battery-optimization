@@ -19,7 +19,7 @@ function motorList = load_motorList1(motors, mdata, esc, voltage, prop_speedMax,
 %     close(conn); % close connection to database
 
     %% ---------------------
-    disp(['load_motorList1:: motors size = ' num2str(size(motors, 1))]);
+%     disp(['load_motorList1:: motors size = ' num2str(size(motors, 1))]);
     for ii = 1:size(motors,1) % filter motors in the database based on maximum current, mass and maximum speed
         motor_id = motors{ii,1}; % obtain motor ID
         esc_id = motors{ii,16}; % obtain ID of ESC recommended for the motor
@@ -40,29 +40,29 @@ function motorList = load_motorList1(motors, mdata, esc, voltage, prop_speedMax,
         [~, noLoad_pos] = min(abs([performance{[performance{:,7}]==1,4}]-voltage)); % find no-load test data close to target voltage
         
         Rm = 2*motors{ii,18}; % read motor windings resitance
-        disp(['load_motorList1:: Rm = ' num2str(Rm)]);
+%         disp(['load_motorList1:: Rm = ' num2str(Rm)]);
         
         kV = motors{ii,17}; % read motor KV rating
-        disp(['load_motorList1:: kV = ' num2str(kV)]);
+%         disp(['load_motorList1:: kV = ' num2str(kV)]);
         
         mass = motors{ii,14}; % read motor mass
-        disp(['load_motorList1:: mass = ' num2str(mass)]);
+%         disp(['load_motorList1:: mass = ' num2str(mass)]);
         
         ironLoss = voltage*performance{noLoad_pos,6}; % calculate iron losses based on no-load current
         voltageMax = max([performance{:,4}]); % obtain max. voltage used for tests
 
         %% ---------------------
         prop_powerMax = prop_torqueMax*prop_speedMax/60*2*pi; % calculate required propeller power at WOT
-        disp(['load_motorList1:: prop_powerMax = ' num2str(prop_powerMax)]);
+%         disp(['load_motorList1:: prop_powerMax = ' num2str(prop_powerMax)]);
         
         prop_powerHover = prop_torqueHover*prop_speedHover/60*2*pi; % calculate required propeller power at hover
-        disp(['load_motorList1:: prop_powerHover = ' num2str(prop_powerHover)]);
+%         disp(['load_motorList1:: prop_powerHover = ' num2str(prop_powerHover)]);
         
         motor_currentMax = (voltage - sqrt(voltage^2-4*Rm*(ironLoss+prop_powerMax)))/(2*Rm); % calculate motor current at WOT
-        disp(['load_motorList1:: motor_currentMax = ' num2str(motor_currentMax)]);
+%         disp(['load_motorList1:: motor_currentMax = ' num2str(motor_currentMax)]);
         
         motor_currentHover = (voltage - sqrt(voltage^2-4*Rm*(ironLoss+prop_powerHover)))/(2*Rm); % calculate motor current at hover
-        disp(['load_motorList1:: motor_currentHover = ' num2str(motor_currentHover)]);
+%         disp(['load_motorList1:: motor_currentHover = ' num2str(motor_currentHover)]);
 %         disp([motor_id motor_currentMax current_max mass voltage voltageMax*1.15 0.8*voltage*kV prop_speedMax]);
         if isreal(motor_currentMax) && isreal(motor_currentHover) && motor_currentMax > 0 && motor_currentHover > 0 && motor_currentMax <= current_max &&...
                 mass <= spec_mass && mass > 0 && 0.8*voltage*kV > prop_speedMax % filter motor
@@ -80,5 +80,5 @@ function motorList = load_motorList1(motors, mdata, esc, voltage, prop_speedMax,
             end
         end
     end
-     disp(['load_motorList1:: motorLists size = ' num2str(size(motorList, 1))]);
+%      disp(['load_motorList1:: motorLists size = ' num2str(size(motorList, 1))]);
 end

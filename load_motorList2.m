@@ -45,13 +45,13 @@ function motorList = load_motorList2(voltage, prop_speedMax, prop_torqueMax, pro
 
         %% ---------------------
         prop_powerMax = prop_torqueMax*prop_speedMax/60*2*pi; % calculate required propeller power at WOT
-        disp(['prop_powerMax = ' num2str(prop_powerMax)]);
+%         disp(['prop_powerMax = ' num2str(prop_powerMax)]);
         prop_powerHover = prop_torqueHover*prop_speedHover/60*2*pi; % calculate required propeller power at hover
         motor_currentMax = (voltage - sqrt(voltage^2-4*Rm*(ironLoss+prop_powerMax)))/(2*Rm); % calculate motor current at WOT
-        disp(['motor_currentMax = ' num2str(motor_currentMax)]);
+%         disp(['motor_currentMax = ' num2str(motor_currentMax)]);
         motor_currentHover = (voltage - sqrt(voltage^2-4*Rm*(ironLoss+prop_powerHover)))/(2*Rm); % calculate motor current at hover
-        disp(['motor_currentHover = ' num2str(motor_currentHover)]);
-        disp(['current_max = ' num2str(current_max)]);
+%         disp(['motor_currentHover = ' num2str(motor_currentHover)]);
+%         disp(['current_max = ' num2str(current_max)]);
         
 %         disp([motor_id motor_currentMax current_max mass voltage voltageMax*1.15 0.8*voltage*kV prop_speedMax]);
         if isreal(motor_currentMax) && isreal(motor_currentHover) && motor_currentMax > 0 && motor_currentHover > 0 && motor_currentMax <= current_max &&...
