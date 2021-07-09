@@ -1,0 +1,8 @@
+LIBRARY uav_sizing_gui
+EXPORTS
+uav_sizing_guiInitialize
+uav_sizing_guiInitializeWithHandlers
+uav_sizing_guiTerminate
+uav_sizing_guiPrintStackTrace
+mlxUav_sizing_gui
+

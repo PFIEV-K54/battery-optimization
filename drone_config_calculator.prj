@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2510719663" file="D:\Matlab2019\bin\uav_sizing\drone_config_calculator.prj" location="D:\Matlab2019\bin\uav_sizing" name="drone_config_calculator" preferred-package-location="D:\Matlab2019\bin\uav_sizing\drone_config_calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3295045563" file="D:\Matlab2019\bin\uav_sizing\drone_config_calculator.prj" location="D:\Matlab2019\bin\uav_sizing" name="drone_config_calculator" preferred-package-location="D:\Matlab2019\bin\uav_sizing\drone_config_calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>drone_config_calculator</param.appname>
     <param.icon />
     <param.icons />
@@ -87,7 +87,7 @@
       <file>${PROJECT_ROOT}\addaxis_zoom_pre.m</file>
       <file>${PROJECT_ROOT}\addaxisplot.m</file>
       <file>${PROJECT_ROOT}\getaddaxisdata.m</file>
-      <file>${PROJECT_ROOT}\load_motorList.m</file>
+      <file>${PROJECT_ROOT}\load_motorList2.m</file>
       <file>${PROJECT_ROOT}\load_propList.m</file>
       <file>${PROJECT_ROOT}\load_propPerf.m</file>
       <file>${PROJECT_ROOT}\plot_motorPerf.m</file>

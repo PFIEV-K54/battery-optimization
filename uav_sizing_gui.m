@@ -651,7 +651,7 @@ set(handles.fullThrottleThrust,'string'," ");
 set(handles.fullThrottlePowerPerMotor,'string'," ");
 set(handles.fullThrottleRPM,'string'," ");
 set(handles.fullThrottleTime,'string'," ");
-set(handles.result,'string'," ");
+set(handles.result,'string',"Running analysis");
 
 %% User parameters config
 RotorNo = str2double(get(handles.RotorNo,'string'));
@@ -767,7 +767,7 @@ while 1
 
     if consideredNo < 1
         %error('ERROR! No matching propeller found!');
-        set(handles.result,'string','ERROR! No matching propeller found!');
+        set(handles.result,'string','No matching propeller found!');
     end
 
     %% Load propeller performance
@@ -793,39 +793,60 @@ while 1
     
     for ii = 1:consideredNo
         % propPerf = RPM, Thrust (g), Power (W), Torque (Nm), Cp, Ct
-        thrustMax_Est = interp1(propPerf{ii}(1:end,3), propPerf{ii}(1:end,2), PowerEst);
-        disp(['thrustMax_Est = ' num2str(thrustMax_Est)]);
-        speedHover = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustHover_Est); % obtaining propeller speed at hover from required thrust for hover
-        speedMax = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustMax_Est); % obtaining propeller speed at WOT from estimated thrust at WOT 
-        speedLimit = propList_considered{ii,6}; % obtaining propeller's limiting speed specified by the manufacturer
-        operatingPoints(ii,1) = {[speedHover thrustHover_Est interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedHover) interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedHover)]}; % obtaining hover operating point
-        operatingPoints(ii,2) = {[speedMax thrustMax_Est interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedMax) interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedMax)]}; % obtaining WOT operating point
-        operatingPoints(ii,3) = {[speedLimit interp1(propPerf{ii}(:,1), propPerf{ii}(:,2), speedLimit) interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedLimit)...
-                      interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedLimit)]}; % obtaining speed limit operating point
+%         propPerf{ii,1}
+%         disp(['size(propPerf{ii,1}(1)) = ' num2str(size(propPerf{ii,1}(1)))]);
+%         size(propPerf{ii},1)
+        if size(propPerf{ii},1) > 1
+            try
+                thrustMax_Est = interp1(propPerf{ii}(1:end,3), propPerf{ii}(1:end,2), PowerEst);
+                speedHover = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustHover_Est); % obtaining propeller speed at hover from required thrust for hover
+                speedMax = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustMax_Est); % obtaining propeller speed at WOT from estimated thrust at WOT 
+                speedLimit = propList_considered{ii,6}; % obtaining propeller's limiting speed specified by the manufacturer
+                operatingPoints(ii,1) = {[speedHover thrustHover_Est interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedHover) interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedHover)]}; % obtaining hover operating point
+                operatingPoints(ii,2) = {[speedMax thrustMax_Est interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedMax) interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedMax)]}; % obtaining WOT operating point
+                operatingPoints(ii,3) = {[speedLimit interp1(propPerf{ii}(:,1), propPerf{ii}(:,2), speedLimit) interp1(propPerf{ii}(:,1), propPerf{ii}(:,4), speedLimit)...
+                          interp1(propPerf{ii}(:,1), propPerf{ii}(:,3), speedLimit)]}; % obtaining speed limit operating point
+            catch
+                set(handles.result,'string','No acceptable config found!');
+            end
+        else
+            set(handles.result,'string','No acceptable propeller found!');
+        end
     end
 
     %% Select propeller
     for ii = 1:consideredNo
         switch OptimisationGoal % selection of approperiate criteria based on user's choice
             case 'hover'
-                selectionCriterion(ii,1) = (operatingPoints{ii,1}(1)*2*pi/60)*operatingPoints{ii,1}(3);
-                selectionCriterion(ii,2) = operatingPoints{ii,1}(4);  % power at hover
+                try
+                    selectionCriterion(ii,1) = (operatingPoints{ii,1}(1)*2*pi/60)*operatingPoints{ii,1}(3);
+                    selectionCriterion(ii,2) = operatingPoints{ii,1}(4);  % power at hover
+                catch 
+                    set(handles.result,'string',' No operating point found!');
+                end
             case 'max'
-                selectionCriterion(ii,1) = (operatingPoints{ii,2}(1)*2*pi/60)*operatingPoints{ii,2}(3);
-                selectionCriterion(ii,2) = operatingPoints{ii,2}(4); % power at WOT
+                try
+                    selectionCriterion(ii,1) = (operatingPoints{ii,2}(1)*2*pi/60)*operatingPoints{ii,2}(3);
+                    selectionCriterion(ii,2) = operatingPoints{ii,2}(4); % power at WOT
+                catch 
+                    set(handles.result,'string',' No operating point found!');
+                end
             case 'utilisation'
                 selectionCriterion(ii,1) = (operatingPoints{ii,3}(1)*2*pi/60)*operatingPoints{ii,3}(3) - (operatingPoints{ii,2}(1)*2*pi/60)*operatingPoints{ii,2}(3);
                 selectionCriterion(ii,2) = operatingPoints{ii,3}(4) - operatingPoints{ii,2}(4); % best usage of propeller's speed rmotorsange
             otherwise
-                error('ERROR! Wrong optimisation criteria!');
+                error('Wrong optimisation criteria!');
         end
     end
 
     methodError(:,1) = abs(selectionCriterion(:,2) - selectionCriterion(:,1)); % absolute error between power and the product of speed and torque due to interpolation
     methodError(:,2) = abs(selectionCriterion(:,2) - selectionCriterion(:,1))./abs(selectionCriterion(:,2)); % relative interpolation error
     for ii = 1:consideredNo
-        if operatingPoints{ii,3}(4) < operatingPoints{ii,2}(4) || isnan(operatingPoints{ii,2}(1))
-            selectionCriterion(ii,:) = inf; % rejecting propellers with numerical errors and with WOT speed over limit speed
+        try
+            if operatingPoints{ii,3}(4) < operatingPoints{ii,2}(4) || isnan(operatingPoints{ii,2}(1))
+                selectionCriterion(ii,:) = inf; % rejecting propellers with numerical errors and with WOT speed over limit speed
+            end
+        catch
         end
     end
 
@@ -833,7 +854,7 @@ while 1
 
     if selectionCriterion(temp_propChosen_pos,2) == inf
         %error('ERROR! No matching propeller found!');
-        set(handles.result,'string','ERROR! No matching propeller found!');
+        set(handles.result,'string',' No matching propeller found!');
     end
 
     %% Load & filter motor data
@@ -846,29 +867,78 @@ while 1
 
     if size(motorList,1) < 1
         %error('ERROR! No matching motor found!');
-        set(handles.result,'string','ERROR! No matching motor found!');
+        set(handles.result,'string','No matching motor found!');
     end
 
     %% Select motor
     switch OptimisationGoal % selection of approperiate criteria based on user's choice
         case 'hover'
-%             [~, temp_motorChosen_pos] = min([motorList{:,11}]); % power at hover
+%              [~, temp_motorChosen_pos] = min([motorList{:,11}]); % power at hover
+            temp_motorChosen_pos = -1;
+            minVal = motorList{1,11};
+            tableSize = size(motorList,1); %size(propPerf{ii},1)
+%             disp(['Table size = ' num2str(tableSize)]);
+%             disp(['operatingPoints size = ' num2str(size(operatingPoints{1},2))]);
+%             try
+                lock = 1;
+                for i = 1 : tableSize
+                    try
+                        temp_motor = motorList(i,:);
+                    catch
+                        lock = 0;
+                    end
+                    if lock == 1
+                        specificThrust_max = round(operatingPoints{i,2}(2)/temp_motor{8}*100)/100; %operatingPoints{i,2}(2)/temp_motor{8};
+                        disp(['specificThrust = ' num2str(specificThrust_max)]);
+                        temp_mass_Propeller = propList_considered{i,5};
+                        temp_mass_Motor = temp_motor{4};
+                        temp_mass_Total = mass_NoDrive_Est + RotorNo*(temp_mass_Motor + temp_mass_Propeller);
+                        power = motorList{i,11};
+                        disp(['power = ' num2str(power)]);
+                        thrustToWeight = power*specificThrust_max*RotorNo/temp_mass_Total;
+                        disp(['thrustToWeight = ' num2str(thrustToWeight)]);
+                        if specificThrust_max >= 4 
+                            if thrustToWeight >= 1.9
+                                if temp_motorChosen_pos == -1
+                                    disp(['temp_motorChosen_pos = ' num2str(i)]);
+                                    temp_motorChosen_pos = i;
+                                end
+                                if power < minVal
+                                    temp_motorChosen_pos = i;
+                                    minVal = motorList{i,11};
+                                end
+                            end
+                        end
+                    else
+                        break;
+                    end
+                end
+%             catch
+%             end
+        case 'max'
+%             [~, temp_motorChosen_pos] = min([motorList{:,8}]); % power at WOT
             temp_motorChosen_pos = 1;
             disp(['MotorList size = ' num2str(size(motorList))]);
             minVal = motorList{1,11};
             tableSize = size(motorList,1);
             for i = 1 : tableSize
-                if motorList{i,11} < minVal
-                    temp_motorChosen_pos = i;
-                    minVal = motorList{i,11};
+                temp_motor = motorList(temp_motorChosen_pos,:);
+                specificThrust = round(operatingPoints{temp_propChosen_pos,2}(2)/temp_motor{8}*100)/100;
+                if specificThrust >= 4 
+                    power = motorList{i,8};
+                    thrustToWeight = power*specificThrust;
+                    if thrustToWeight >= 1.9
+                        if power < minVal
+                            temp_motorChosen_pos = i;
+                            minVal = motorList{i,8};
+                        end
+                    end
                 end
             end
-        case 'max'
-            [~, temp_motorChosen_pos] = min([motorList{:,8}]); % power at WOT
         case 'utilisation'
             [~, temp_motorChosen_pos] = min(abs([motorList{:,3}]-[motorList{:,7}]));  % best usage of motor's current range
         otherwise
-            error('ERROR! Wrong optimisation criteria!');
+            error('Wrong optimisation criteria!');
     end
 
     motorChosen = motorList(temp_motorChosen_pos,:); % selection of best motor for the application
@@ -938,14 +1008,16 @@ end
 resultString =['For a ' num2str(RotorNo) '-rotor drone with estimated total mass of ' num2str(round(mass_Total_Est)) ' g (calculated  of ' num2str(round(mass_Total)) ' g):'];
 switch OptimisationGoal
     case 'hover'
-        textOptimisation = ['the highest specific thrust of ' num2str(round(operatingPoints{temp_propChosen_pos,1}(2)/motorChosen{11}*100)/100)  ' gf/W per motor at hover.'];
+        specificThrust = round(operatingPoints{temp_propChosen_pos,1}(2)/motorChosen{11}*100)/100;
+        textOptimisation = ['the highest specific thrust of ' num2str(specificThrust)  ' gf/W per motor at hover.'];
     case 'max'
-        textOptimisation = ['the highest specific thrust of ' num2str(round(operatingPoints{temp_propChosen_pos,2}(2)/motorChosen{8}*100)/100)  ' gf/W per motor at full throttle.'];
+        specificThrust = round(operatingPoints{temp_propChosen_pos,2}(2)/motorChosen{8}*100)/100;
+        textOptimisation = ['the highest specific thrust of ' num2str(specificThrust)  ' gf/W per motor at full throttle.'];
     case 'utilisation'
         textOptimisation = 'maximum usable power range of propeller';
     otherwise
         %error('ERROR! Wrong optimisation criteria!');
-        set(handles.result,'string','ERROR! Wrong optimisation criteria!');
+        set(handles.result,'string','Wrong optimisation criteria!');
 end
 
 selectedPropeller = propSpecification{1};

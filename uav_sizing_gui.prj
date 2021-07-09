@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration file="D:\Matlab2019\bin\uav_sizing\uav_sizing_gui.prj" location="D:\Matlab2019\bin\uav_sizing" name="uav_sizing_gui" target="target.ezdeploy.library" target-name="Library Compiler">
+  <configuration build-checksum="3444192638" file="D:\Matlab2019\bin\uav_sizing\uav_sizing_gui.prj" location="D:\Matlab2019\bin\uav_sizing" name="uav_sizing_gui" preferred-package-location="D:\Matlab2019\bin\uav_sizing\uav_sizing_gui\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.library" target-name="Library Compiler">
     <param.appname>uav_sizing_gui</param.appname>
     <param.icon />
     <param.icons />
@@ -45,7 +45,7 @@
     <param.net.tsa.namespace />
     <param.net.tsa.superclass>Class1</param.net.tsa.superclass>
     <param.net.tsa.metadata />
-    <param.net.tsa.metadata.assembly>${PROJECT_ROOT}</param.net.tsa.metadata.assembly>
+    <param.net.tsa.metadata.assembly>D:\Matlab2019\bin\uav_sizing</param.net.tsa.metadata.assembly>
     <param.net.saved.interface />
     <param.cpp.api>option.cpp.all</param.cpp.api>
     <unset>
@@ -114,7 +114,7 @@
       <file>${PROJECT_ROOT}\addaxis_zoom_pre.m</file>
       <file>${PROJECT_ROOT}\addaxisplot.m</file>
       <file>${PROJECT_ROOT}\getaddaxisdata.m</file>
-      <file>${PROJECT_ROOT}\load_motorList.m</file>
+      <file>${PROJECT_ROOT}\load_motorList2.m</file>
       <file>${PROJECT_ROOT}\load_propList.m</file>
       <file>${PROJECT_ROOT}\load_propPerf.m</file>
       <file>${PROJECT_ROOT}\plot_motorPerf.m</file>
@@ -142,7 +142,6 @@
         <toolbox name="fixedpoint" />
         <toolbox name="matlabhdlcoder" />
         <toolbox name="neuralnetwork" />
-        <toolbox name="polyspacebugfinder" />
       </toolboxes>
       <toolbox>
         <matlabcoder>
@@ -173,11 +172,6 @@
         <neuralnetwork>
           <enabled>true</enabled>
         </neuralnetwork>
-      </toolbox>
-      <toolbox>
-        <polyspacebugfinder>
-          <enabled>true</enabled>
-        </polyspacebugfinder>
       </toolbox>
     </matlab>
     <platform>
