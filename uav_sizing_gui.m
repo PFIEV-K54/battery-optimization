@@ -22,7 +22,7 @@ function varargout = uav_sizing_gui(varargin)
 
 % Edit the above text to modify the response to help uav_sizing_gui
 
-% Last Modified by GUIDE v2.5 23-Jun-2021 21:49:42
+% Last Modified by GUIDE v2.5 11-Jul-2021 21:13:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -864,8 +864,9 @@ while 1
                 temp_mass_Propeller = propList_considered{temp_propChosen_pos,5};
                 temp_mass_Motor = temp_motor{4};
                 temp_mass_Total = mass_NoDrive_Est + RotorNo*(temp_mass_Motor + temp_mass_Propeller);
-                thrustToWeight = power*specificThrust_max*RotorNo/temp_mass_Total;
-                if specificThrust_max >= 4 && thrustToWeight >= 1.6
+                thrustToWeight1 = power*specificThrust_max*RotorNo/temp_mass_Total;
+                 disp(['specificThrust_max = ' num2str(specificThrust_max)]);
+                if specificThrust_max >= 4 %&& thrustToWeight1 >= 1.6
                     if temp_motorChosen_pos == -1
                         temp_motorChosen_pos = i;
                     end
@@ -878,7 +879,8 @@ while 1
             
             if temp_motorChosen_pos == -1
                 set(handles.result,'string','No acceptable config found!');
-                break;
+                disp('end');
+                return;
             end
         case 'max'
             [~, temp_motorChosen_pos] = min([motorList{:,8}]); % power at WOT
@@ -1045,3 +1047,10 @@ function BattCapacity_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function hoveringTime_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to hoveringTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
