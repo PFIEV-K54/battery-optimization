@@ -27,6 +27,7 @@ function motorList = load_motorList2(voltage, prop_speedMax, prop_torqueMax, pro
         end
         
         current_max = motors{ii,13}; % obtain maximum motor current
+        disp(['current_max = ' num2str(current_max)]);
         if current_max < 1 % if no maximum current data is available, obtain it from ESC's maximum current or guess based on voltage
             if esc_id > 0 && esc{esc_id,5} > 0
                 current_max = esc{esc_id,5};

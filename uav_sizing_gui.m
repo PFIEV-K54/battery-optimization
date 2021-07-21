@@ -653,6 +653,9 @@ set(handles.fullThrottleRPM,'string'," ");
 set(handles.fullThrottleTime,'string'," ");
 set(handles.result,'string'," ");
 
+f = waitbar(0,'Bat dau...');
+pause(.5)
+
 %% User parameters config
 RotorNo = str2double(get(handles.RotorNo,'string'));
 disp(['RotorNo: ' num2str(RotorNo)]);
@@ -737,6 +740,9 @@ mass_NoDrive_Est = str2double((get(handles.mass_NoDrive, 'string'))) + mass_Payl
 mass_Total_Est = mass_NoDrive_Est + RotorNo*(mass_Motor_Est + mass_Propeller_Est);
 mass_Total = 0;
 
+waitbar(.33,f,'Tinh toan');
+pause(1)
+
 while 1
     %% clear all variables
     voltage_hover = [];
@@ -787,13 +793,14 @@ while 1
     
     % Calculate thrustMax_Est from MaxDischargeCurrent
     eff = 0.6;
-    PowerEst = BattCellNo*BattCellVoltage*MaxDischargeCurrent*SafetyFactor*eff;
+    ElectricalPowerEst = BattCellNo*BattCellVoltage*MaxDischargeCurrent;
+    MechanicPowerEst = ElectricalPowerEst*SafetyFactor*eff;
     disp(['MaxDischargeCurrent = ' num2str(MaxDischargeCurrent)]);
-    disp(['PowerEst = ' num2str(PowerEst)]);
+    disp(['ElectricalPowerEst = ' num2str(ElectricalPowerEst)]);
     
     for ii = 1:consideredNo
         % propPerf = RPM, Thrust (g), Power (W), Torque (Nm), Cp, Ct
-        thrustMax_Est = interp1(propPerf{ii}(1:end,3), propPerf{ii}(1:end,2), PowerEst);
+        thrustMax_Est = interp1(propPerf{ii}(1:end,3), propPerf{ii}(1:end,2), MechanicPowerEst);
         disp(['thrustMax_Est = ' num2str(thrustMax_Est)]);
         speedHover = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustHover_Est); % obtaining propeller speed at hover from required thrust for hover
         speedMax = interp1(propPerf{ii}(2:end,2), propPerf{ii}(2:end,1), thrustMax_Est); % obtaining propeller speed at WOT from estimated thrust at WOT 
@@ -859,18 +866,20 @@ while 1
             tableSize = size(motorList,1);
             for i = 1 : tableSize
                 temp_motor = motorList(i,:);
-                power = motorList{i,11};
-                specificThrust_max = round(operatingPoints{temp_propChosen_pos,2}(2)/temp_motor{8}*100)/100;
+                power = temp_motor{11}; %motorList{i,11};
+                specificThrust_max = round(operatingPoints{temp_propChosen_pos,1}(2)/temp_motor{11}*100)/100;%round(operatingPoints{temp_propChosen_pos,2}(2)/temp_motor{8}*100)/100; %round(operatingPoints{temp_propChosen_pos,1}(2)/motorChosen{11}*100)/100
                 temp_mass_Propeller = propList_considered{temp_propChosen_pos,5};
                 temp_mass_Motor = temp_motor{4};
                 temp_mass_Total = mass_NoDrive_Est + RotorNo*(temp_mass_Motor + temp_mass_Propeller);
-                thrustToWeight1 = power*specificThrust_max*RotorNo/temp_mass_Total;
-                 disp(['specificThrust_max = ' num2str(specificThrust_max)]);
+                hover_efficient = temp_motor{12}/100;
+                disp(['hover_efficient = ' num2str(hover_efficient)]);
+                thrustToWeight1 = power*specificThrust_max*RotorNo/temp_mass_Total/hover_efficient;
+                disp(['thrustToWeight1 = ' num2str(thrustToWeight1)]);
                 if specificThrust_max >= 4 %&& thrustToWeight1 >= 1.6
                     if temp_motorChosen_pos == -1
                         temp_motorChosen_pos = i;
                     end
-                    if motorList{i,11} <= minVal
+                    if power <= minVal
                         temp_motorChosen_pos = i;
                         minVal = motorList{i,11};
                     end
@@ -954,12 +963,15 @@ while 1
 end
         
 %% Display results and plot characteristics
-resultString =['For a ' num2str(RotorNo) '-rotor drone with estimated total mass of ' num2str(round(mass_Total_Est)) ' g (calculated  of ' num2str(round(mass_Total)) ' g):'];
+waitbar(.67,f,'Chuan bi ket qua');
+pause(1);
+
+resultString =['Multi-copter ' num2str(RotorNo) '-rotor voi khoi luong uoc tinh ' num2str(round(mass_Total_Est)) ' g (khoi luong thuc te tinh toan duoc ' num2str(round(mass_Total)) ' g):'];
 switch OptimisationGoal
     case 'hover'
-        textOptimisation = ['the highest specific thrust of ' num2str(round(operatingPoints{temp_propChosen_pos,1}(2)/motorChosen{11}*100)/100)  ' gf/W per motor at hover.'];
+        textOptimisation = ['luc day rieng lon nhat ' num2str(round(operatingPoints{temp_propChosen_pos,1}(2)/motorChosen{11}*100)/100)  ' gf/W cho moi dong co o che do bay treo.'];
     case 'max'
-        textOptimisation = ['the highest specific thrust of ' num2str(round(operatingPoints{temp_propChosen_pos,2}(2)/motorChosen{8}*100)/100)  ' gf/W per motor at full throttle.'];
+        textOptimisation = ['luc day rieng lon nhat ' num2str(round(operatingPoints{temp_propChosen_pos,2}(2)/motorChosen{8}*100)/100)  ' gf/W cho moi dong co o che do max ga.'];
     case 'utilisation'
         textOptimisation = 'maximum usable power range of propeller';
     otherwise
@@ -969,48 +981,54 @@ end
 
 selectedPropeller = propSpecification{1};
 set(handles.suggestedProp,'string',selectedPropeller);
-resultString = [resultString 'APC ' selectedPropeller ' propeller should be chosen for ' textOptimisation];
+resultString = [resultString ' Canh quat APC ' selectedPropeller ' co the duoc lua chon cho ' textOptimisation];
 
 selectedMotor = motorSpecification{1};
 set(handles.suggestedMotor,'string',selectedMotor);
-resultString = [resultString selectedMotor ' (' num2str(round(motorSpecification{2}/10)*10) ' KV) motor should be selected with '...
-      num2str(round(motorSpecification{4}*100)/100) ' Nm torque at maximum speed of ' num2str(round(motorSpecification{3}/100)*100) ' RPM.'];
+resultString = [resultString ' Dong co ' selectedMotor ' (' num2str(round(motorSpecification{2})) ' KV) nen duoc lua chon, cho momen xoan '...
+      num2str(round(motorSpecification{4}*100)/100) ' Nm tai toc do quay lon nhat ' num2str(round(motorSpecification{3})) ' RPM.'];
 
 powerAtHover = num2str(round(motorChosen{11}));
 set(handles.hoveringPowerPerMotor,'string',powerAtHover);
 powerAtFullThrottle = num2str(round(motorChosen{8}));
 set(handles.fullThrottlePowerPerMotor,'string',powerAtFullThrottle);
-resultString = [resultString 'One motor uses ' powerAtHover ' W of electrical power at hover and ' powerAtFullThrottle ' W of electrical power at full throttle.'];
+resultString = [resultString ' Mot dong co su dung ' powerAtHover ' W cong suat trong che do bay treo va ' powerAtFullThrottle ' W cong suat trong che do max ga.'];
 
-suggestedESC = num2str(ceil(escSpecification));
+% suggestedESC = num2str(ceil(escSpecification));
+suggestedESC = num2str(MaxDischargeCurrent);
+
 set(handles.suggestedESC,'string',suggestedESC);
-resultString = [resultString 'The drive should be controlled by a ' suggestedESC ' A ESC per motor.'];
+resultString = [resultString ' Dong co nen duoc dieu khien voi ' suggestedESC ' A ESC moi dong co.'];
 
-suggestedBattery = [num2str(baterrySpecification(1)) 'S ' num2str(ceil(baterrySpecification(2))) 'C LiPo battery of '...
-       num2str(baterrySpecification(3)) ' mAh'];
+suggestedBattery = [num2str(baterrySpecification(1)) 'S ' num2str(ceil(baterrySpecification(2))) 'C LiPo dung luong  '...
+       num2str(baterrySpecification(3)) ' mAh. '];
 set(handles.suggestedBattery,'string',suggestedBattery);
-resultString = [resultString 'The whole system should be powered by a ' suggestedBattery];
+resultString = [resultString ' Toan bo he thong nen su dung pin ' suggestedBattery];
 
 hoveringRPM = num2str(round(operatingPoints{temp_propChosen_pos,1}(1)/100)*100);
 set(handles.hoveringRPM,'string',hoveringRPM);
 hoveringThrust = num2str(round(operatingPoints{temp_propChosen_pos,1}(2)*RotorNo));
 set(handles.hoveringThrust,'string',hoveringThrust);
-resultString = [resultString 'Hovering flight requires ' num2str(round(RotorNo*operatingPoints{temp_propChosen_pos,1}(4))) ' W of mechanical power (' num2str(round(operatingPoints{temp_propChosen_pos,1}(3)*100)/100)...
-       ' Nm at ' hoveringRPM ' RPM) to achieve ' hoveringThrust ' gf of total thrust.'];
+resultString = [resultString 'Che do bay treo su dung ' num2str(round(RotorNo*operatingPoints{temp_propChosen_pos,1}(4))) ' W cong suat co khi (' num2str(round(operatingPoints{temp_propChosen_pos,1}(3)))...
+       ' Nm tai ' hoveringRPM ' RPM) de dat duoc ' hoveringThrust ' gf luc day.'];
 
 fullThrottleRPM = num2str(round(operatingPoints{temp_propChosen_pos,2}(1)/100)*100);
 set(handles.fullThrottleRPM,'string',fullThrottleRPM);
 fullThrottleThrust = num2str(round(operatingPoints{temp_propChosen_pos,2}(2)*RotorNo));
 set(handles.fullThrottleThrust,'string',fullThrottleThrust);
-resultString = [resultString 'Full throttle flight requires ' num2str(round(RotorNo*operatingPoints{temp_propChosen_pos,2}(4))) ' W of mechanical power (' num2str(round(operatingPoints{temp_propChosen_pos,2}(3)*100)/100)...
-       ' Nm at ' fullThrottleRPM ' RPM) to achieve ' fullThrottleThrust ' gf of total thrust.'];
+resultString = [resultString ' Che do max ga su dung ' num2str(round(RotorNo*operatingPoints{temp_propChosen_pos,2}(4))) ' W cong suat co khi (' num2str(round(operatingPoints{temp_propChosen_pos,2}(3)*100)/100)...
+       ' Nm tai ' fullThrottleRPM ' RPM) de dat duoc ' fullThrottleThrust ' gf luc day.'];
 
 hoveringTime =  num2str(round(time_hover(end)*60));
 set(handles.hoveringTime,'string',hoveringTime);
 fullThrottleTime = num2str(round(time_max(end)*60));
 set(handles.fullThrottleTime,'string',fullThrottleTime);
-resultString = [resultString 'This configuration should achieve around ' hoveringTime ' min of hover and around ' fullThrottleTime ' min of flight at full throttle.'];
+resultString = [resultString ' Cau hinh co the dat duoc ' hoveringTime ' phut bay treo và khoang ' fullThrottleTime ' phut trong che do max ga.'];
 set(handles.result,'string',resultString);    
+
+waitbar(1,f,'Xong');
+pause(1);
+close(f);
 
 %% display results
 plot_propPerf; % plot propeller performance & battery simulation results 
