@@ -354,7 +354,7 @@ function BattCapacity_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of BattCapacity as text
 %        str2double(get(hObject,'String')) returns contents of BattCapacity as a double
 BattCellNo = str2double(get(handles.BattCellNo,'string')); %S 1P, battery cell count
-BattAvgEnergyDensity = 0.1825; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
+BattAvgEnergyDensity = 0.250; % (Wh/g) Battery energy density 100-265 Wh/kg (https://en.wikipedia.org/wiki/Lithium-ion_battery)
 BattCellVoltage = str2double(get(handles.BattCellVoltage,'string')); % V per cell, battery cell voltage
 BattAvgSpecificCapacity = BattAvgEnergyDensity*1000/(BattCellNo*BattCellVoltage);  % mAh/g
 battCapacity = get(handles.BattCapacity,'string');
@@ -646,6 +646,7 @@ set(handles.suggestedESC,'string'," ");
 set(handles.hoveringThrust,'string'," ");
 set(handles.hoveringPowerPerMotor,'string'," ");
 set(handles.hoveringRPM,'string'," ");
+set(handles.hoveringTime,'string'," ");
 set(handles.hoveringPowerPerMotor,'string'," ");
 set(handles.fullThrottleThrust,'string'," ");
 set(handles.fullThrottlePowerPerMotor,'string'," ");
@@ -888,6 +889,7 @@ while 1
             
             if temp_motorChosen_pos == -1
                 set(handles.result,'string','No acceptable config found!');
+                close(f);
                 disp('end');
                 return;
             end
